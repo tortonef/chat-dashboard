@@ -1,0 +1,33 @@
+{
+  "name": "chat-dashboard",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "seed": "node scripts/seed.mjs",
+    "predev": "node scripts/seed.mjs",
+    "dev": "next dev",
+    "prebuild": "node scripts/seed.mjs",
+    "build": "next build",
+    "start": "next start",
+    "pretest": "node scripts/seed.mjs",
+    "test": "node --test \"lib/**/*.test.ts\""
+  },
+  "dependencies": {
+    "next": "^16.4.6",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "recharts": "^3.10.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.5",
+    "@types/node": "^26.6.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "tailwindcss": "^4.3.5",
+    "typescript": "^7.0.2"
+  }
+}
