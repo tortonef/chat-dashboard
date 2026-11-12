@@ -4,6 +4,15 @@ A dashboard you customize by talking to it. Ask for a chart in plain language; t
 
 > "Compare monthly revenue by customer segment as lines" · "Turn the pie into bars" · "Remove the customers widget"
 
+![Dashboard in dark theme: KPI tiles, revenue charts, and the chat panel with two requests](docs/screenshot-dark.png)
+
+<details>
+<summary>Light theme</summary>
+
+![The same dashboard in light theme](docs/screenshot-light.png)
+
+</details>
+
 ## Quick start
 
 Requires Node.js 22.18 or newer and a free [Groq API key](https://console.groq.com/keys).
@@ -73,3 +82,7 @@ To use your own data, point `lib/db.ts` at another SQLite file and adjust the do
 ```bash
 npm test
 ```
+
+## License
+
+[MIT](LICENSE)
