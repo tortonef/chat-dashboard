@@ -6,7 +6,7 @@ export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
   if (typeof body?.sql !== "string") return Response.json({ error: "Expected { sql }" }, { status: 400 });
   try {
-    return Response.json({ rows: runQuery(body.sql) });
+    return Response.json({ rows: runQuery(body.sql, body.filters) });
   } catch (e) {
     return Response.json({ error: e instanceof Error ? e.message : String(e) }, { status: 400 });
   }

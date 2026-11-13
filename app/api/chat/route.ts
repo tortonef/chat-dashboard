@@ -29,7 +29,7 @@ export async function POST(req: Request) {
         const parsed = JSON.parse(raw);
         const results: Result[] = resolveActions(parsed.actions ?? [], widgets).map((a) => {
           if (a.type === "remove") return a;
-          const rows = runQuery(a.widget.sql);
+          const rows = runQuery(a.widget.sql, body.filters);
           checkColumns(a.widget, rows);
           return { ...a, rows };
         });

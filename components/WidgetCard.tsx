@@ -30,7 +30,7 @@ function Chart({ widget, rows }: { widget: Widget; rows: Row[] }) {
   const y = widget.y.slice(0, MAX_SERIES);
   const h = widget.h ?? DEFAULT_H;
 
-  if (chart === "kpi") return <p className="py-4 text-4xl font-semibold tracking-tight">{fmt(rows[0][y[0]])}</p>;
+  if (chart === "kpi") return <p className="py-4 text-4xl font-semibold tracking-tight">{rows[0][y[0]] == null ? "–" : fmt(rows[0][y[0]])}</p>;
 
   if (chart === "table")
     return (

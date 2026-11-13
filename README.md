@@ -17,8 +17,11 @@ A dashboard you customize by talking to it. Ask for a chart in plain language; t
 
 - **Chat to build**: ask for charts, KPIs or tables; change or remove them the same way.
 - **Arrange by hand**: drag a widget by its title to reorder it, drag its corner to resize it. Both also work from the keyboard (focus the handle, use the arrow keys).
+- **Global filters**: add a filter on any column with a short list of values (country, segment, category, status) or on a date, then toggle values or set a range. Every widget follows, including ones that never mention the filtered table.
 - **Database page**: what the demo data is, every table with its columns and keys, and queries to try.
 - **SQL page**: a schema browser and an editor to run your own read-only queries.
+
+![Dashboard filtered to two countries and orders from 2026](docs/screenshot-filters.png)
 
 ![SQL page: schema browser on the left, query editor and result grid on the right](docs/screenshot-sql.png)
 
@@ -62,6 +65,7 @@ The model answers in JSON mode with a list of `add` / `update` / `remove` action
 | Path | Role |
 |---|---|
 | `lib/db.ts` | Read-only SQLite access and schema description for the prompt |
+| `lib/filters.ts` | Global filters: rewrites any query to see only the matching rows |
 | `lib/llm.ts` | Groq call (OpenAI-compatible API) and system prompt |
 | `lib/widgets.ts` | Widget type, validation of model output, default dashboard |
 | `app/api/` | `chat` and `query` endpoints |
@@ -69,13 +73,27 @@ The model answers in JSON mode with a list of `add` / `update` / `remove` action
 | `components/` | Widget card with charts, chat panel, SQL workbench, header |
 | `scripts/seed.mjs` | Demo database generator |
 
+### Global filters
+
+Widgets are arbitrary SQL, so filters are not added to each query's `WHERE`. Instead the server shadows every filtered table with a CTE of the same name that holds only the matching rows, and lets the filter flow down foreign keys:
+
+```sql
+WITH "customers"   AS (SELECT * FROM main."customers" WHERE "country" IN ('Italy')),
+     "orders"      AS (SELECT * FROM main."orders" WHERE "customer_id" IN (SELECT "id" FROM "customers")),
+     "order_items" AS (SELECT * FROM main."order_items" WHERE "order_id" IN (SELECT "id" FROM "orders"))
+SELECT COUNT(*) FROM orders   -- the widget's own SQL, unchanged
+```
+
+Filters narrow child tables (customers → orders → order items) but not parents: a date filter on orders does not change the customer count.
+
 ## Safety
 
 The SQL is written by an LLM and, for saved widgets, sent back by the browser, so it is treated as untrusted:
 
 - the SQLite connection is opened **read-only**;
 - only a single `SELECT` / `WITH` statement runs per request;
-- results are capped at 1,000 rows.
+- results are capped at 1,000 rows;
+- filter values from the browser are checked against the schema and the column's known values before they reach the SQL text.
 
 There is no authentication, rate limiting, or query timeout. Run it locally or behind your own auth; do not expose it to the internet as is.
 
