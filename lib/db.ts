@@ -23,6 +23,31 @@ export function runQuery(sql: string): Row[] {
   return rows;
 }
 
+export type Table = {
+  name: string;
+  rows: number;
+  columns: { name: string; type: string; pk: boolean; ref?: string }[]; // ref = "table.column" for foreign keys
+};
+
+/** Tables with columns, keys and row counts, for the Database and SQL pages. */
+export function getTables(): Table[] {
+  return runQuery("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'").map(({ name }) => {
+    const refs = new Map(
+      runQuery(`SELECT "from" AS col, "table" || '.' || "to" AS ref FROM pragma_foreign_key_list('${name}')`).map((r) => [r.col, String(r.ref)]),
+    );
+    return {
+      name: String(name),
+      rows: Number(runQuery(`SELECT COUNT(*) AS n FROM "${name}"`)[0].n),
+      columns: runQuery(`SELECT name, type, pk FROM pragma_table_info('${name}')`).map((c) => ({
+        name: String(c.name),
+        type: String(c.type),
+        pk: !!c.pk,
+        ref: refs.get(c.name),
+      })),
+    };
+  });
+}
+
 let schema: string | undefined;
 
 /**

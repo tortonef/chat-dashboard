@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { runQuery } from "./db.ts";
-import { checkColumns, DEFAULT_WIDGETS, resolveActions } from "./widgets.ts";
+import { getTables, runQuery } from "./db.ts";
+import { checkColumns, DEFAULT_WIDGETS, reorder, resolveActions, validateWidget } from "./widgets.ts";
 
 test("database rejects anything but reads", () => {
   assert.throws(() => runQuery("DELETE FROM orders"), /Only SELECT/);
@@ -36,4 +36,25 @@ test("resolveActions validates and merges", () => {
 test("checkColumns reports missing columns", () => {
   const w = { ...DEFAULT_WIDGETS[3], y: ["nope"] };
   assert.throws(() => checkColumns(w, runQuery(w.sql)), /nope not in the query result/);
+});
+
+test("reorder moves a widget and ignores out-of-range targets", () => {
+  const ids = (to: number) => reorder(DEFAULT_WIDGETS, "orders", to).map((w) => w.id).join();
+  assert.equal(ids(0), "orders,revenue,customers,monthly,category");
+  assert.equal(ids(4), "revenue,customers,monthly,category,orders");
+  assert.equal(reorder(DEFAULT_WIDGETS, "orders", 9), DEFAULT_WIDGETS);
+  assert.equal(reorder(DEFAULT_WIDGETS, null, 0), DEFAULT_WIDGETS);
+});
+
+test("widget height is optional and clamped", () => {
+  assert.equal("h" in validateWidget(DEFAULT_WIDGETS[3]), false);
+  assert.equal(validateWidget({ ...DEFAULT_WIDGETS[3], h: 5000 }).h, 640);
+  assert.equal(validateWidget({ ...DEFAULT_WIDGETS[3], h: 300 }).h, 300);
+});
+
+test("getTables describes columns and foreign keys", () => {
+  const items = getTables().find((t) => t.name === "order_items")!;
+  assert.ok(items.rows > 1000);
+  assert.deepEqual(items.columns[1], { name: "order_id", type: "INTEGER", pk: false, ref: "orders.id" });
+  assert.equal(items.columns[0].pk, true);
 });

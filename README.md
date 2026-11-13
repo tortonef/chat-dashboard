@@ -13,6 +13,15 @@ A dashboard you customize by talking to it. Ask for a chart in plain language; t
 
 </details>
 
+## Features
+
+- **Chat to build**: ask for charts, KPIs or tables; change or remove them the same way.
+- **Arrange by hand**: drag a widget by its title to reorder it, drag its corner to resize it. Both also work from the keyboard (focus the handle, use the arrow keys).
+- **Database page**: what the demo data is, every table with its columns and keys, and queries to try.
+- **SQL page**: a schema browser and an editor to run your own read-only queries.
+
+![SQL page: schema browser on the left, query editor and result grid on the right](docs/screenshot-sql.png)
+
 ## Quick start
 
 Requires Node.js 22.18 or newer and a free [Groq API key](https://console.groq.com/keys).
@@ -44,10 +53,11 @@ type Widget = {
   sql: string;             // SELECT that produces the data
   x: string; y: string[];  // result columns to plot
   span: 1 | 2 | 3;         // width in grid columns
+  h?: number;              // chart height in px
 };
 ```
 
-The model answers in JSON mode with a list of `add` / `update` / `remove` actions. The server validates them, runs the SQL, and checks that the mapped columns exist. If anything fails, the error is sent back to the model for one retry. The dashboard layout is saved in the browser's `localStorage`.
+The model answers in JSON mode with a list of `add` / `update` / `remove` actions. The server validates them, runs the SQL, and checks that the mapped columns exist. If anything fails, the error is sent back to the model for one retry. The dashboard (widgets, their order and size) is saved in the browser's `localStorage`.
 
 | Path | Role |
 |---|---|
@@ -55,7 +65,8 @@ The model answers in JSON mode with a list of `add` / `update` / `remove` action
 | `lib/llm.ts` | Groq call (OpenAI-compatible API) and system prompt |
 | `lib/widgets.ts` | Widget type, validation of model output, default dashboard |
 | `app/api/` | `chat` and `query` endpoints |
-| `components/` | Widget card with charts, chat panel |
+| `app/database/`, `app/sql/` | Database description page and SQL workbench |
+| `components/` | Widget card with charts, chat panel, SQL workbench, header |
 | `scripts/seed.mjs` | Demo database generator |
 
 ## Safety

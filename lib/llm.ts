@@ -31,7 +31,7 @@ ${JSON.stringify(widgets)}
 
 Respond ONLY with a JSON object: {"reply": string, "actions": Action[]}
 Action is one of:
-- {"type": "add", "widget": {"title", "chart", "sql", "x", "y", "span"}}
+- {"type": "add", "widget": {"title", "chart", "sql", "x", "y", "span", "h"?}}
 - {"type": "update", "id": "<existing widget id>", "widget": {only the fields that change}}
 - {"type": "remove", "id": "<existing widget id>"}
 
@@ -41,6 +41,7 @@ Widget fields:
 - x: the result column for the category or time axis ("" for kpi and table).
 - y: array of numeric result columns, one per series (kpi uses the first; [] for table). For several series, return one column per series (pivot with SUM(CASE WHEN ...)), at most 8.
 - span: width in grid columns, 1 to 3. Use 1 for kpi and pie, 2 for trends unless asked otherwise.
+- h: optional chart height in pixels, 160 to 640. Set it only when the user asks for a taller or shorter chart.
 
 Rules:
 - For relative periods ("last 3 months") anchor on the latest date in the data, e.g. (SELECT MAX(order_date) FROM orders), not on date('now').

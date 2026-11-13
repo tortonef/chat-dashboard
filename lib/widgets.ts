@@ -12,7 +12,11 @@ export type Widget = {
   x: string; // category / time column
   y: string[]; // value columns, one per series
   span: 1 | 2 | 3; // grid columns
+  h?: number; // chart height in px (default DEFAULT_H)
 };
+
+export const DEFAULT_H = 260;
+export const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v));
 
 export type Action = { type: "set"; widget: Widget } | { type: "remove"; id: string };
 export type Result = { type: "set"; widget: Widget; rows: Row[] } | { type: "remove"; id: string };
@@ -31,7 +35,8 @@ export function validateWidget(w: unknown): Widget {
   if (!Array.isArray(y) || y.some((c) => typeof c !== "string")) throw new Error("widget.y must be an array of column names");
   const span = w.span ?? 1;
   if (span !== 1 && span !== 2 && span !== 3) throw new Error("widget.span must be 1, 2 or 3");
-  return { id: w.id, title: w.title, chart: w.chart as Widget["chart"], sql: w.sql, x: (w.x as string) ?? "", y, span };
+  const h = w.h == null ? undefined : clamp(Number(w.h) || DEFAULT_H, 160, 640);
+  return { id: w.id, title: w.title, chart: w.chart as Widget["chart"], sql: w.sql, x: (w.x as string) ?? "", y, span, ...(h && { h }) };
 }
 
 /** Turns the model's raw actions into validated ones; "update" patches are merged onto the existing widget. */
@@ -46,6 +51,15 @@ export function resolveActions(raw: unknown, current: Widget[]): Action[] {
     if (a.type === "remove") return { type: "remove", id: existing.id };
     return { type: "set", widget: validateWidget({ ...existing, ...(a.widget as object), id: existing.id }) };
   });
+}
+
+/** Moves the widget `id` to index `to`; returns the same list if either is out of range. */
+export function reorder(list: Widget[], id: string | null, to: number): Widget[] {
+  const from = list.findIndex((w) => w.id === id);
+  if (from < 0 || to < 0 || to >= list.length || from === to) return list;
+  const next = [...list];
+  next.splice(to, 0, ...next.splice(from, 1));
+  return next;
 }
 
 /** Throws if the columns the chart needs are missing from the query result. */
